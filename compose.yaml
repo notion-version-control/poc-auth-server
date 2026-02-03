@@ -7,3 +7,8 @@ services:
       - 'POSTGRES_USER=local'
     ports:
       - '5432'
+
+  redis:
+    image: 'redis:latest'
+    ports:
+      - '6379'
