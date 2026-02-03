@@ -1,3 +1,56 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
+
   application:
     name: notion-version-control
+
+  # JPA
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  # Flyway
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # OAuth2
+  security:
+    oauth2:
+      client:
+        registration:
+          notion:
+            client-id: ${NOTION_CLIENT_ID}
+            client-secret: ${NOTION_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          notion:
+            authorization-uri: https://api.notion.com/v1/oauth/authorize
+            token-uri: https://api.notion.com/v1/oauth/token
+            # Notion은 표준 OAuth2 user-info 엔드포인트를 지원하지 않음
+            # 토큰 응답에 사용자 정보가 포함되어 있으므로 CustomOAuth2UserService에서 처리
+
+# Application custom properties
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiry: 30m
+    refresh-token-expiry: 30d
+    refresh-token-rotation-delay: 5s
+  security:
+    cors:
+      allowed-origins:
+        - ${CORS_ALLOWED_ORIGIN:http://localhost:3000}
+      allow-credentials: true
+      max-age: 3600
+    public-paths:
+      - /oauth2/**
+      - /login/oauth2/**
+      - /api/public/**
+#      - {Swagger Resources}
+  oauth2:
+    redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/auth/callback}
+    failure-redirect-uri: ${OAUTH2_FAILURE_REDIRECT_URI:http://localhost:3000/auth/error}

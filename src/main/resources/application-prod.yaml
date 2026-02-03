@@ -1,0 +1,9 @@
+# Production environment configuration
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    org.springframework.security: WARN
+    ai.usnack.notionversioncontrol: INFO

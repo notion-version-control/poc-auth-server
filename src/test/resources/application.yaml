@@ -1,0 +1,41 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  security:
+    oauth2:
+      client:
+        registration:
+          notion:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          notion:
+            authorization-uri: https://api.notion.com/v1/oauth/authorize
+            token-uri: https://api.notion.com/v1/oauth/token
+            user-info-uri: https://api.notion.com/v1/users/me
+            user-name-attribute: id
+
+app:
+  jwt:
+    secret: dGVzdC1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tZ2VuZXJhdGlvbi1tdXN0LWJlLWxvbmctZW5vdWdo
+    access-token-expiry: 30m
+    refresh-token-expiry: 30d
+    refresh-token-rotation-delay: 5s
+
+  security:
+    cors:
+      allowed-origins:
+        - http://localhost:3000
+      allow-credentials: true
+      max-age: 3600
+    public-paths:
+      - /api/health
+      - /api/public/**
+
+  oauth2:
+    redirect-uri: http://localhost:3000/auth/callback
+    failure-redirect-uri: http://localhost:3000/auth/error
