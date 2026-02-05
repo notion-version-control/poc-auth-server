@@ -1,6 +1,7 @@
 services:
   postgres:
     build: docker/postgres
+    image: postgres:17-pg_cron
     environment:
       - 'POSTGRES_DB=notion-version-control'
       - 'POSTGRES_PASSWORD=local'
