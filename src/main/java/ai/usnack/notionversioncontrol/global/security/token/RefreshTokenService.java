@@ -1,52 +1,49 @@
 package ai.usnack.notionversioncontrol.global.security.token;
 
+import ai.usnack.notionversioncontrol.global.security.entity.RefreshToken;
 import ai.usnack.notionversioncontrol.global.security.jwt.JwtProperties;
+import ai.usnack.notionversioncontrol.global.security.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
-  private final RedisTemplate<String, String> redisTemplate;
+  private final RefreshTokenRepository refreshTokenRepository;
   private final JwtProperties jwtProperties;
 
-  private static final String REFRESH_TOKEN_PREFIX = "auth:refresh:";
-
+  @Transactional
   public void saveRefreshToken(UUID userId, String tokenId, String token) {
-    String key = buildKey(userId, tokenId);
-    redisTemplate.opsForValue().set(key, token, jwtProperties.refreshTokenExpiry());
+    Instant expiresAt = Instant.now().plus(jwtProperties.refreshTokenExpiry());
+    refreshTokenRepository.save(RefreshToken.create(userId, tokenId, token, expiresAt));
   }
 
+  @Transactional(readOnly = true)
   public Optional<String> getRefreshToken(UUID userId, String tokenId) {
-    String key = buildKey(userId, tokenId);
-    return Optional.ofNullable(redisTemplate.opsForValue().get(key));
+    return refreshTokenRepository.findByUserIdAndTokenId(userId, tokenId)
+        .filter(t -> t.getExpiresAt().isAfter(Instant.now()))
+        .map(RefreshToken::getToken);
   }
 
+  @Transactional
   public void deleteRefreshToken(UUID userId, String tokenId) {
-    String key = buildKey(userId, tokenId);
-    redisTemplate.delete(key);
+    refreshTokenRepository.deleteByUserIdAndTokenId(userId, tokenId);
   }
 
+  @Transactional
   public void deleteAllRefreshTokens(UUID userId) {
-    String pattern = REFRESH_TOKEN_PREFIX + userId + ":*";
-    Set<String> keys = redisTemplate.keys(pattern);
-    if (keys != null && !keys.isEmpty()) {
-      redisTemplate.delete(keys);
-    }
+    refreshTokenRepository.deleteAllByUserId(userId);
   }
 
+  @Transactional
   public void scheduleTokenDeletion(UUID userId, String tokenId) {
-    String key = buildKey(userId, tokenId);
-    redisTemplate.expire(key, jwtProperties.refreshTokenRotationDelay());
-  }
-
-  private String buildKey(UUID userId, String tokenId) {
-    return REFRESH_TOKEN_PREFIX + userId + ":" + tokenId;
+    Instant expiresAt = Instant.now().plus(jwtProperties.refreshTokenRotationDelay());
+    refreshTokenRepository.updateExpiresAt(userId, tokenId, expiresAt);
   }
 }

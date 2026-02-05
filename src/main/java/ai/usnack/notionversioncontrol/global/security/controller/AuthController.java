@@ -46,7 +46,7 @@ public class AuthController {
     UUID userId = UUID.fromString(claims.getSubject());
     String tokenId = claims.getId();
 
-    // Verify token exists in Redis
+    // Verify token exists
     refreshTokenService.getRefreshToken(userId, tokenId)
         .orElseThrow(() -> new AuthException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
