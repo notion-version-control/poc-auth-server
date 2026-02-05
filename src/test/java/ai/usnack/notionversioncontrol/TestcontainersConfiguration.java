@@ -1,9 +1,11 @@
 package ai.usnack.notionversioncontrol;
 
-import com.redis.testcontainers.RedisContainer;
+import java.nio.file.Path;
+
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -13,13 +15,15 @@ class TestcontainersConfiguration {
   @Bean
   @ServiceConnection
   PostgreSQLContainer postgresContainer() {
-    return new PostgreSQLContainer(DockerImageName.parse("postgres:latest"));
-  }
-
-  @Bean
-  @ServiceConnection
-  RedisContainer redisContainer() {
-    return new RedisContainer(DockerImageName.parse("redis:latest"));
+    String imageName = new ImageFromDockerfile("nvc-postgres-test", false)
+        .withDockerfile(Path.of("docker/postgres/Dockerfile"))
+        .get();
+    return new PostgreSQLContainer(DockerImageName.parse(imageName).asCompatibleSubstituteFor("postgres"))
+        .withCommand(
+            "postgres",
+            "-c", "shared_preload_libraries=pg_cron",
+            "-c", "cron.database_name=test"
+        );
   }
 
 }
