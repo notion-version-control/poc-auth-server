@@ -1,14 +1,13 @@
 services:
   postgres:
-    image: 'postgres:latest'
+    build: docker/postgres
     environment:
       - 'POSTGRES_DB=notion-version-control'
       - 'POSTGRES_PASSWORD=local'
       - 'POSTGRES_USER=local'
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_cron
+      -c cron.database_name=notion-version-control
     ports:
       - '5432'
-
-  redis:
-    image: 'redis:latest'
-    ports:
-      - '6379'
