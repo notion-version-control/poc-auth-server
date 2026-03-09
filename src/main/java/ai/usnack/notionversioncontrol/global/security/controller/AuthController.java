@@ -4,6 +4,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +29,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Auth", description = "인증 API")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -37,6 +41,9 @@ public class AuthController {
   private final AuthAccountRepository authAccountRepository;
   private final JwtProperties jwtProperties;
 
+  @Operation(summary = "토큰 갱신", description = "refreshToken 쿠키로 새 Access Token 발급")
+  @ApiResponse(responseCode = "200", description = "토큰 갱신 성공")
+  @ApiResponse(responseCode = "401", description = "유효하지 않은 refresh token")
   @PostMapping("/refresh")
   public ResponseEntity<TokenResponse> refresh(
       @CookieValue("refreshToken") String refreshToken,
@@ -72,6 +79,8 @@ public class AuthController {
     return ResponseEntity.ok(new TokenResponse(newAccessToken));
   }
 
+  @Operation(summary = "로그아웃", description = "현재 세션 로그아웃 (Access + Refresh token 무효화)")
+  @ApiResponse(responseCode = "204", description = "로그아웃 성공")
   @PostMapping("/logout")
   public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader,
       @CookieValue(value = "refreshToken", required = false) String refreshToken,
@@ -106,6 +115,8 @@ public class AuthController {
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(summary = "전체 로그아웃", description = "모든 세션 로그아웃 (해당 유저의 모든 refresh token 삭제)")
+  @ApiResponse(responseCode = "204", description = "전체 로그아웃 성공")
   @PostMapping("/logout-all")
   public ResponseEntity<Void> logoutAll(@RequestHeader("Authorization") String authHeader,
       HttpServletResponse response) {

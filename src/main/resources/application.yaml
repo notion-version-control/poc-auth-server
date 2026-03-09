@@ -50,7 +50,9 @@ app:
       - /oauth2/**
       - /login/oauth2/**
       - /api/public/**
-#      - {Swagger Resources}
+      - /swagger-ui/**
+      - /swagger-ui.html
+      - /v3/api-docs/**
   oauth2:
     redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/auth/callback}
     failure-redirect-uri: ${OAUTH2_FAILURE_REDIRECT_URI:http://localhost:3000/auth/error}
